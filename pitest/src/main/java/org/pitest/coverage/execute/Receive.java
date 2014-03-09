@@ -49,7 +49,10 @@ final class Receive implements ReceiveStrategy {
       readLineHit(is, hits);
     }
 
-    this.handler.apply(createCoverageResult(is, d, hits));
+    CoverageResult cr = createCoverageResult(is, d, hits);
+    if (cr.isGreenTest()) {
+    	this.handler.apply(cr);
+    }
   }
 
   private void readLineHit(final SafeDataInputStream is,
