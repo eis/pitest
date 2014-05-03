@@ -63,9 +63,9 @@ public class ConfigurationFactoryTest {
   }
 
   @Test
-  public void shouldNotCreateAConfigurationThatFindsTestNGTestsWhenTestNGNotOnClassPath() {
+  public void shouldCreateAConfigurationThatFindsTestNGTestsEvenWhenTestNGNotOnClassPath() {
     putJUnitOnClasspath();
-    assertTrue(this.testee.createConfiguration().testUnitFinder()
+    assertFalse(this.testee.createConfiguration().testUnitFinder()
         .findTestUnits(FullyCoveredByTestNGTesteeTest.class).isEmpty());
   }
 

@@ -22,7 +22,6 @@ import java.util.Set;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.internal.runners.ErrorReportingRunner;
 import org.junit.runner.Description;
 import org.junit.runner.Runner;
 import org.junit.runner.manipulation.Filter;
@@ -44,7 +43,7 @@ public class JUnitCustomRunnerTestUnitFinder implements TestUnitFinder {
 
     final Runner runner = AdaptedJUnitTestUnit.createRunner(clazz);
 
-    if (isNotARunnableTest(runner, clazz.getName())) {
+    if (isNotARunnableTest(runner, clazz.getName()) || !hasTestMethods(clazz)) {
       return Collections.emptyList();
     }
 
@@ -59,9 +58,44 @@ public class JUnitCustomRunnerTestUnitFinder implements TestUnitFinder {
 
   private boolean isNotARunnableTest(final Runner runner, final String className) {
     return (runner == null)
-        || runner.getClass().isAssignableFrom(ErrorReportingRunner.class)
         || isParameterizedTest(runner) || isAJUnitThreeErrorOrWarning(runner)
         || isJUnitThreeSuiteMethodNotForOwnClass(runner, className);
+  }
+
+  private boolean hasTestMethods(Class<?> clazz) {
+    final Set<Method> methods = Reflection.allMethods(clazz);
+    if (hasJunit4TestMethods(methods) || hasJunit3TestMethods(methods)
+        || hasTestNGTestMethods(methods)
+        || hasSpockTestMethods(methods)) {
+      return true;
+    }
+    return false;
+  }
+
+  private boolean hasSpockTestMethods(Set<Method> methods) {
+    for (Method method : methods) {
+      if (method.getName().startsWith("$spock_feature")) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private boolean hasTestNGTestMethods(Set<Method> methods) {
+    return hasAnnotation(methods, org.testng.annotations.Test.class);
+  }
+
+  private boolean hasJunit3TestMethods(Set<Method> methods) {
+    for (Method method : methods) {
+      if (method.getName().startsWith("test")) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private boolean hasJunit4TestMethods(Set<Method> methods) {
+    return hasAnnotation(methods, org.junit.Test.class);
   }
 
   private boolean isAJUnitThreeErrorOrWarning(final Runner runner) {
